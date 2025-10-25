@@ -1,138 +1,141 @@
-🧠 Identity Access Governance (IAM) System
+Identity Access Governance (Spring Boot)​
+Production‑ready backend for managing users, roles, and access requests with approval workflows, Segregation of Duties (SoD) enforcement, audit logging, and basic authentication.​
 
-A Spring Boot + MySQL based project demonstrating key principles of Identity and Access Management (IAM) and Governance — including user onboarding, role-based access control, access request workflows, Segregation of Duties (SoD) checks, and detailed audit logging.
+Highlights​
+Access request lifecycle with approval or rejection and automatic role assignment on approval.​
 
-Built to showcase enterprise-grade access management logic, this project helps understand how organizations manage, govern, and secure user access across systems.
+SoD policy engine to block conflicting combinations (e.g., Finance ↔ HR/Audit).​
 
-🚀 Features
+Comprehensive audit trail for user/role creation, requests, approvals, rejections, and assignments.​
 
-✅ User Identity Management — Register, view, and manage user accounts.
-✅ Role-Based Access Control (RBAC) — Create roles and assign them securely.
-✅ Access Request Workflow — Users can raise, approve, or reject role access requests.
-✅ Segregation of Duties (SoD) — Prevents conflicting roles (e.g., Finance + Audit).
-✅ Audit & Compliance Logging — Every action (approve/reject/login) is logged.
-✅ Spring Security Authentication — Basic Auth with encrypted passwords (BCrypt).
-✅ Exception Handling — Clean API responses and validation messages.
+HTTP Basic for privileged endpoints and BCrypt password hashing on registration.​
 
-🧩 Tech Stack
-Layer	Technology
-Backend Framework	Spring Boot (v3.5.x)
-Language	Java 17
-Database	MySQL 8.0
-ORM	Hibernate + Spring Data JPA
-Security	Spring Security (HTTP Basic Auth)
-Build Tool	Maven
-⚙️ Setup Instructions
-1️⃣ Clone the Repository
-git clone https://github.com/YOUR_GITHUB_USERNAME/identity-access-governance.git
-cd identity-access-governance
+Tech stack​
+Java 17+, Spring Boot 3 (Web, Data JPA, Security, Validation), Maven.​
 
-2️⃣ Create MySQL Database
+Relational database via JPA/Hibernate (e.g., MySQL).​
 
-Login to MySQL and run:
+Project structure​
+src/main/java/... application code organized by controller, service, model, repository.​
 
-CREATE DATABASE iam_system;
+src/main/resources for configuration such as application.properties.​
 
-3️⃣ Configure Application Properties
+pom.xml for dependencies and build configuration.​
 
-Open src/main/resources/application.properties and update your credentials:
+Getting started​
+Prerequisites: Java 17+, Maven wrapper, and a running SQL database.​
 
-spring.datasource.url=jdbc:mysql://localhost:3306/iam_system
-spring.datasource.username=root
-spring.datasource.password=root1234
-spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+Clone and open the project at the root folder where pom.xml exists.​
+
+Configuration​
+Create or edit src/main/resources/application.properties as below.​
+
+text
+spring.datasource.url=jdbc:mysql://localhost:3306/iagdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+spring.datasource.username=your_user
+spring.datasource.password=your_password
 
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
+spring.jpa.properties.hibernate.format_sql=true
 
 server.port=8080
+Build and run​
+bash
+mvnw clean compile
+mvnw spring-boot:run
+Security​
+Approval endpoints under /api/requests/** require HTTP Basic authentication.​
 
-4️⃣ Run the Application
-./mvnw spring-boot:run
+A local admin user is configured for testing (username and password can be adjusted in security configuration).​
 
+SoD rules (default)​
+Conflicts enforced by the policy service: Finance ↔ HR and Finance ↔ Audit.​
 
-Then open your browser at 👉 http://localhost:8080
+Requests violating these pairs are rejected during approval.​
 
-🧮 Sample API Endpoints
-Method	Endpoint	Description
-POST	/api/users/register	Register a new user
-GET	/api/users/{username}	Fetch user details by username
-POST	/api/roles	Create a new role
-GET	/api/roles	View all roles
-POST	/api/access/request	Raise access request for a role
-PUT	/api/access/approve/{id}	Approve access request
-PUT	/api/access/reject/{id}	Reject access request
-GET	/api/audit/logs	Retrieve audit/compliance logs
-🔐 Default Security
-Username	Password	Role
-admin	admin123	ADMIN
+Domain model​
+User: id, username, email, password (BCrypt), active, roles.​
 
-You can change this in:
+Role: id, name (e.g., ROLE_ADMIN, ROLE_FINANCE, ROLE_HR, ROLE_AUDIT), description.​
 
-config/SecurityConfig.java
+AccessRequest: id, user, role, reason, status (PENDING/APPROVED/REJECTED), decidedBy, decidedAt.​
 
-🧠 Concept Overview
-🔹 Identity Management
+AuditLog: id, timestamp, actor, action, entityType, entityId, details.​
 
-Creation, authentication, and lifecycle management of user identities.
+APIs​
+Roles​
+Create a role: POST /api/roles.​
+Body:
 
-🔹 Access Governance
+json
+{ "name": "ROLE_USER", "description": "Basic user role" }
+List roles: GET /api/roles.​
 
-Ensures only authorized users receive specific access rights.
+Users​
+Register user: POST /api/users/register.​
+Body:
 
-🔹 Segregation of Duties (SoD)
-
-Prevents conflict by blocking role combinations that violate governance rules (e.g., “ROLE_FINANCE” + “ROLE_AUDIT”).
-
-🔹 Audit & Compliance
-
-Every decision (request/approve/reject) is logged for tracking and security audits.
-
-🗂 Folder Structure
-src/
- ├── main/
- │   ├── java/com/iamdemo/identity_access_governance/
- │   │   ├── model/           # Entity classes
- │   │   ├── repository/      # JPA Repositories
- │   │   ├── service/         # Business logic (IAM, SoD, audit)
- │   │   ├── controller/      # REST endpoints
- │   │   └── config/          # Security configuration
- │   └── resources/
- │       └── application.properties
- └── test/
-
-🧾 Example JSON Payloads
-🔸 User Registration
+json
 {
-  "username": "shruti",
-  "email": "shruti@example.com",
-  "password": "mypassword"
+  "username": "shruti_demo",
+  "email": "shruti_demo@example.com",
+  "password": "Passw0rd!"
 }
+Get by username: GET /api/users/{username}.​
 
-🔸 Access Request
+Access requests​
+Create request: POST /api/requests.​
+Body:
+
+json
 {
-  "username": "shruti",
-  "role": "ROLE_FINANCE",
-  "reason": "Need access for reporting module"
+  "userId": 5,
+  "roleId": 4,
+  "reason": "Needs access for testing"
 }
+List pending: GET /api/requests/pending.​
 
-🔍 Testing the APIs
+Resolve (approve or reject): POST /api/requests/{id}/resolve?action=APPROVED&approver=admin (requires Basic Auth).​
 
-You can use Postman or cURL to test endpoints.
+Audit logs​
+List logs: GET /api/auditlogs.​
 
-Example request:
+Test flows​
+Positive approval​
+Ensure the target role is not already assigned and is not in the SoD conflict map (e.g., ROLE_ADMIN).​
 
-curl -X POST http://localhost:8080/api/users/register \
--H "Content-Type: application/json" \
--d '{"username": "shruti", "email": "shruti@example.com", "password": "mypassword"}'
+Create the request and approve with Basic Auth to expect APPROVED and a role assignment audit.​
 
-🌟 Future Enhancements
+SoD rejection​
+If the user has ROLE_FINANCE, request ROLE_HR or ROLE_AUDIT and approve to expect REJECTED with a SoD conflict reason.​
 
-🚀 JWT Authentication with refresh tokens
-📊 React.js Admin Dashboard for access governance visualization
-☁️ AWS Deployment (RDS + EC2 + S3)
-🧩 Role Review & Recertification Workflow
+Duplicate role rejection​
+Request a role the user already has and approve to expect REJECTED with an “Already has role” reason.​
+
+Validation and errors​
+409 Conflict on duplicate username, email, or role name.​
+
+400 Bad Request on validation failures such as blank fields or invalid email.​
+
+404 Not Found when resources do not exist.​
+
+Postman​
+Import a collection that covers register, create role, create request, approve or reject, and list audit logs.​
+
+Use an environment with BASE_URL, ADMIN_USER, and ADMIN_PASS for quick testing.​
+
+Troubleshooting​
+401 Unauthorized on approve: add HTTP Basic credentials for the admin user.​
+
+SoD not triggering: confirm exact role names match the policy and the user holds the conflicting role.​
+
+Everything REJECTED: ensure the requested role is not already assigned and is not mapped as conflicting.​
+
+Roadmap​
+JWT/OAuth2, multi‑approver workflows, request expiration, periodic access reviews, CSV exports.​
+
+Role ownership and approval routing rules
 
 👩‍💻 Author
 
